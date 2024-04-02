@@ -1,0 +1,28 @@
+---
+- name: Install and Configure frontend Nginx server
+  hosts: all
+  become: yes
+  become_method: sudo
+  vars:
+     local_path: /home/ubuntu
+     remote_path: /home/ubuntu  
+  tasks:
+    - name: Install frontend Nginx from ECR
+      apt:
+        name: item-nginx
+        state: present
+        owner: ubuntu
+        group: ubunutu
+        mode: '0735'       
+    - name: Copy Nginx configure file
+      template:
+        src: default.conf
+        dest: /etc/nginx/conf.d/default.conf
+      notify: 
+        - Restart Nginx
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: item-svc
+        state: restarted          
