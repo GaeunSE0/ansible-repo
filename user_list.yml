@@ -1,8 +1,14 @@
 ---
-user:
-- name: user1
-job: developer
-- name: user2
-job: manager
+users:
+  - name: user1
+    job: developer
+  - name: user2
+    job: manager
 
+  - name: bob
+    job: devloper
+  - name: fred
+    job: developer
+  - name: sally
+    job: manager
 

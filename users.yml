@@ -1,0 +1,46 @@
+---
+- name: Create User1
+  hosts: dev,test
+  vars_files:
+    - /home/greg/ansible/locker.yml
+    - /home/greg/ansible/user_list.yml
+  tasks: 
+    - name: Add group1
+      group:
+        name: devops
+        state: present
+    - name: Add user1
+      user: 
+        name: "{{item.name}}"
+        comment: "{{item.job}}"
+        groups: devops
+        password: "{{ 'Imadev' | password_hash('sha512') }}"
+        password_expire_max: 30
+        append: yes
+      loop: "{{users}}"
+- name: Create User2
+  hosts: prod
+  vars_files:
+    - /home/greg/ansible/locker.yml
+    - /home/greg/ansible/user_list.yml
+  tasks: 
+    - name: Add group2
+      group:
+        name: opsmgr
+        state: present
+    - name: Add user2
+      user: 
+        name: "{{item.name}}"
+        comment: "{{item.job}}"
+        groups: opsmgr
+        password: "{{ 'Imamgr' | password_hash('sha512') }}"
+        password_expire_max: 30
+        append: yes
+      loop: "{{users}}"
+
+
+
+
+
+
+
