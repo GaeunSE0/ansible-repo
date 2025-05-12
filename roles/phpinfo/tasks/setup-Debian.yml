@@ -1,0 +1,86 @@
+---
+- name: Set the correct opcache filename (Ubuntu/Debian).
+  set_fact:
+    php_opcache_conf_filename: "10-opcache.ini"
+
+- name: Add dependencies for PHP versions.
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - python3-debian
+    state: present
+
+# Huge thanks to https://www.jeffgeerling.com/comment/34112#comment-34112
+- name: Make API request to Launchpad
+  uri:
+    url: "https://api.launchpad.net/devel/~ondrej/+archive/ubuntu/php"
+    return_content: true
+    method: GET
+    headers:
+      Accept: "application/json"
+  register: launchpad_response
+  check_mode: false
+
+- name: Parse JSON to extract signing key fingerprint
+  ansible.builtin.set_fact:
+    signing_key_fingerprint: "{{ launchpad_response.json.signing_key_fingerprint }}"
+
+- name: Retrieve ASCII representation of the key using the signing key fingerprint
+  uri:
+    url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x{{ signing_key_fingerprint }}"
+    return_content: true
+    method: GET
+  register: keyserver_response
+  check_mode: false
+
+- name: Set data for Ondrej's repo (Ubuntu).
+  ansible.builtin.set_fact:
+    ondrej_repo_uri: "https://ppa.launchpadcontent.net/ondrej/php/ubuntu"
+    # Remove 'Comment' because response can be out of order.
+    # See: https://github.com/geerlingguy/ansible-role-php-versions/issues/94
+    ondrej_repo_signed_by: "{{ keyserver_response.content | regex_replace('\nComment.+\n','\n') }}"
+  when: ansible_distribution == "Ubuntu"
+
+- debug: var=ondrej_repo_signed_by
+
+- name: Set data for Ondrej's repo (Debian).
+  ansible.builtin.set_fact:
+    ondrej_repo_uri: "https://packages.sury.org/php"
+    ondrej_repo_signed_by: "https://packages.sury.org/php/apt.gpg"
+  when: ansible_distribution == "Debian"
+
+- name: Add Ondrej's PHP repo.
+  become: true
+  ansible.builtin.deb822_repository:
+    state: present
+    name: "ondrej-php-{{ ansible_facts['distribution_release'] }}"
+    types: [deb]
+    uris: ["{{ ondrej_repo_uri }}"]
+    suites: ["{{ ansible_facts['distribution_release'] }}"]
+    components: [main]
+    signed_by: "{{ ondrej_repo_signed_by }}"
+  register: php_ondrej_debian_repo
+
+- name: Update apt caches after repo is added.
+  apt: update_cache=true
+  when:
+    - php_ondrej_debian_repo.changed
+    - ansible_os_family == "Debian"
+  tags: ['skip_ansible_lint']
+
+- name: Purge PHP version packages (besides the currently chosen php_version).
+  apt:
+    name: "{{ php_versions_debian | reject('search', 'php' ~ php_version) | list }}"
+    state: absent
+    purge: true
+    force: true
+  register: php_version_purge
+
+- name: Also purge php-common package if any versions were just purged.
+  apt:
+    name: php-common
+    state: absent
+    purge: true
+    force: true
+  when: php_version_purge.changed | bool

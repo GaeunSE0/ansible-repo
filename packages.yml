@@ -1,0 +1,22 @@
+---
+- name: Install php and mariadb
+  hosts: dev,test,prod
+  tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - php
+          - mariadb
+        state: present
+
+- name: Install RPM Development Tools and Upgrade Packages
+  hosts: dev
+  tasks:
+    - name: RPM Devlopment Tools
+      yum:
+        name: "@RPM Development Tools"
+        state: present
+    - name: upgrade packages
+      yum:
+        name: "*"
+        state: latest

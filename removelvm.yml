@@ -1,0 +1,17 @@
+---
+- name: Remove LVM
+  hosts: all
+  tasks:
+    - name: Unmount the logical volume
+      ansible.posix.mount:
+        path: /mnt/hi # 마운트 포인트 경로 (실제 사용하신 경로로 변경)
+        state: absent
+      ignore_errors: yes # 마운트되어 있지 않아도 오류 발생 방지
+
+    - name: Remove the logical volume
+      community.general.lvol:
+        vg: researchzz
+        lv: hi
+        state: absent
+        force: true
+

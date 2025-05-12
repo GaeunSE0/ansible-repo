@@ -1,0 +1,21 @@
+---
+- name: Confiure YUM repository
+  hosts: all
+  tasks:
+    - name: Configure BASE repository
+      yum_repository:
+        file: BASE
+        name: BASE
+        description: "Ansible base software"
+        baseurl: file:///mnt/image/BaseOS/
+        gpgcheck: no
+        enabled: yes
+
+    - name: Configure STREAM repository
+      yum_repository:
+        file: STREAM
+        name: STREAM
+        description: "Ansible stream software"
+        baseurl: file:///mnt/image/AppStream/
+        gpgcheck: no
+        enabled: yes

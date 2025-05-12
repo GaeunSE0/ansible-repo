@@ -1,0 +1,15 @@
+[dev]
+mgNode1
+
+[test]
+mgNode2
+
+[prod]
+mgNode3
+
+[webservers:children]
+prod
+
+[balancers]
+mgNode1
+mgNode2
