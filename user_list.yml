@@ -4,6 +4,7 @@ users:
     job: developer
   - name: user2
     job: manager
+<<<<<<< HEAD
 
   - name: bob
     job: devloper
@@ -11,4 +12,12 @@ users:
     job: developer
   - name: sally
     job: manager
+=======
+>>>>>>> 8165c8e533574f00b7c80a1e163a96c37bd6013d
 
+  - name: bob
+    job: devloper
+  - name: fred
+    job: developer
+  - name: sally
+    job: manager
